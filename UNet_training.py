@@ -97,10 +97,6 @@ class RunManager():
         self.epoch_loss += loss.item() * self.loader.batch_size
 
 
-dir_img = '..//input//train//images'
-dir_mask = '..//input//train//masks'
-
-
 class CustomDataset(Dataset):
     def __init__(self, img_dir, mask_dir, desired_height_width):
         self.img_dir = img_dir
@@ -139,6 +135,9 @@ class CustomDataset(Dataset):
             'mask': mask
         }
 
+
+dir_img = '/home/john/input/train/images'
+dir_mask = '/home/john/input/train/masks'
 train_dataset = CustomDataset(dir_img, dir_mask, 572)
 
 

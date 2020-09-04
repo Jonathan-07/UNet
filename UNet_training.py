@@ -102,8 +102,8 @@ class CustomDataset(Dataset):
         self.img_dir = img_dir
         self.mask_dir = mask_dir
         self.desired_height_width = desired_height_width
-        all_imgs = listdir(img_dir)[0:10]
-        all_masks = listdir(mask_dir)[0:10]
+        all_imgs = listdir(img_dir)
+        all_masks = listdir(mask_dir)
         self.total_imgs = natsort.natsorted(all_imgs)
         self.total_masks = natsort.natsorted(all_masks)
 

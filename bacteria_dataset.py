@@ -39,7 +39,7 @@ class Bacteria(Dataset):
         print('There are ', self.number_image, 'images')
         print('The size', self.image_width, ' and ', self.image_height)
 
-bacteria_data = Bacteria('home/john/Data/'20160712_SJ102_Pers_fos.nd2 - 20160712_SJ102_Pers_fos.nd2 (series 001)-2.tif'')
+bacteria_data = Bacteria('home/john/Data/test.tif')
 phase, mask = bacteria_data.__getitem__(1)
 plt.imshow(phase)
 plt.show()

@@ -38,3 +38,10 @@ class Bacteria(Dataset):
     def datainfo(self):
         print('There are ', self.number_image, 'images')
         print('The size', self.image_width, ' and ', self.image_height)
+
+bacteria_data = Bacteria('../Data/20160712_SJ102_Pers_fos.nd2%20-%2020160712_SJ102_Pers_fos.nd2%20%28series%20001%29-2.tif')
+phase, mask = bacteria_data.__getitem__(1)
+plt.imshow(phase)
+plt.show()
+plt.imshow(mask)
+plt.show()

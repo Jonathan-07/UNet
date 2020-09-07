@@ -41,9 +41,11 @@ class Bacteria(Dataset):
 
 bacteria_data = Bacteria('/home/john/Data/test.tif')
 phase, mask = bacteria_data.__getitem__(1)
-print(phase)
-print(mask)
-# plt.imshow(phase)
-# plt.show()
-# plt.imshow(mask)
-# plt.show()
+
+phases = np.empty(190, dtype=object)
+masks = np.empty(190, dtype=object)
+# 190 is the number of images in this case
+
+for i in range(189):
+    phases[i] = bacteria_data.__getitem__(i)[0]
+    masks[i] = bacteria_data.__getitem__(i)[1]

@@ -1,14 +1,11 @@
 from glob import glob
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.utils.data import DataLoader, random_split
-from torch.utils.data import Dataset
-from torchvision import transforms, datasets, models
-from collections import OrderedDict
-from collections import namedtuple
+from torch.utils.data import Dataset, DataLoader, random_split
+from torchvision import transforms, datasets, models, utils
+from collections import OrderedDict, namedtuple
 from itertools import product
 import pandas as pd
 import time
@@ -19,6 +16,7 @@ from PIL import Image
 from torchvision.transforms import ToTensor
 import matplotlib.pyplot as plt
 import natsort
+import numpy as np
 
 from UNet_full_network import *
 

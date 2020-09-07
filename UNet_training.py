@@ -154,12 +154,12 @@ class CustomDataset_from_arr(Dataset):
     def __getitem__(self, idx):
         image = self.total_imgs[idx]
         #image = image.convert("RGB")
-        image = self.preprocess(image, self.desired_height_width)
+#         image = self.preprocess(image, self.desired_height_width)
         image = ToTensor()(image)
 
         mask = self.total_masks[idx]
         # mask = mask.convert("RGB")
-        mask = self.preprocess(mask, self.desired_height_width)
+#         mask = self.preprocess(mask, self.desired_height_width)
         mask = ToTensor()(mask)
 
         return {

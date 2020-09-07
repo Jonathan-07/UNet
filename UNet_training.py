@@ -135,18 +135,18 @@ class CustomDataset(Dataset):
 
     
 class CustomDataset_from_arr(Dataset):
-    def __init__(self, img_arr, mask_arr, desired_width, desired_height):
-        self.desired_width = desired_width
-        self.desired_height = desired_height
+    def __init__(self, img_arr, mask_arr):
+#         self.desired_width = desired_width
+#         self.desired_height = desired_height
         self.total_imgs = img_arr
         self.total_masks = mask_arr
 
-    @classmethod
-    def preprocess(cls, pil_img, desired_height_width):
-        newW = desired_width
-        newH = desired_height
-        pil_img = pil_img.resize((newW, newH))
-        return pil_img
+#     @classmethod
+#     def preprocess(cls, pil_img, desired_height_width):
+#         newW = desired_width
+#         newH = desired_height
+#         pil_img = pil_img.resize((newW, newH))
+#         return pil_img
 
     def __len__(self):
         return len(self.total_imgs)

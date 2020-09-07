@@ -135,10 +135,89 @@ class CustomDataset(Dataset):
             'mask': mask
         }
 
+    
+class CustomDataset_from_arr(Dataset):
+    def __init__(self, img_arr, mask_arr, desired_width, desired_height):
+        self.desired_width = desired_width
+        self.desired_height = desired_height
+        self.total_imgs = img_arr
+        self.total_masks = mask_arr
 
+    @classmethod
+    def preprocess(cls, pil_img, desired_height_width):
+        newW = desired_width
+        newH = desired_height
+        pil_img = pil_img.resize((newW, newH))
+        return pil_img
+
+    def __len__(self):
+        return len(self.total_imgs)
+
+    def __getitem__(self, idx):
+        image = self.total_imgs[idx]
+        #image = image.convert("RGB")
+        image = self.preprocess(image, self.desired_height_width)
+        image = ToTensor()(image)
+
+        mask = self.total_masks[idx]
+        # mask = mask.convert("RGB")
+        mask = self.preprocess(mask, self.desired_height_width)
+        mask = ToTensor()(mask)
+
+        return {
+            'image': image,
+            'mask': mask
+        }
+    
+
+
+class Bacteria(Dataset):
+
+    def __init__(self, file_name, transform=None):
+        self.file_name = file_name
+        img = Image.open(file_name)
+        self.number_image = img.n_frames
+        self.image_width = img.size[0]
+        self.image_height = img.size[1]
+        img.close
+
+    def loadback(self, index):
+        img = Image.open(self.file_name)
+        img.seek(index)
+        phase = np.asarray(img)
+        img.seek(index+1)
+        mask = np.asarray(img)
+        img.close()
+        masker = torch.from_numpy(mask.astype(np.float32))
+        return phase, mask
+
+    def __len__(self):
+        return(self.number_image/2)
+
+    def __getitem__(self, index):
+        phase, mask = self.loadback(index)
+
+        return(phase, mask)
+
+    def datainfo(self):
+        print('There are ', self.number_image, 'images')
+        print('The size', self.image_width, ' and ', self.image_height)
+
+bacteria_data = Bacteria('/home/john/Data/test.tif')
+phase, mask = bacteria_data.__getitem__(1)
+
+phases = np.empty(190, dtype=object)
+masks = np.empty(190, dtype=object)
+# 190 is the number of images in this case
+
+for i in range(189):
+    phases[i] = bacteria_data.__getitem__(i)[0]
+    masks[i] = bacteria_data.__getitem__(i)[1]
+    
+    
 dir_img = '/home/john/input/train/images'
 dir_mask = '/home/john/input/train/masks'
-train_dataset = CustomDataset(dir_img, dir_mask, 572)
+train_dataset = CustomDataset_from_arr(phases, masks)
 
 
 params = OrderedDict(
@@ -151,7 +230,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 for run in RunBuilder.get_runs(params):
 
-    network = UNet(n_channels=3, n_classes=1)
+    network = UNet(n_channels=1, n_classes=1)
     network = network.to(device)
     train_loader = DataLoader(train_dataset, batch_size=run.batch_size, shuffle=False)
     loader = train_loader

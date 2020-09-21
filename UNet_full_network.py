@@ -62,8 +62,8 @@ class UpAlong(nn.Module):
         diffY = a2.size()[2] - a1.size()[2]
         diffX = a2.size()[3] - a1.size()[3]
 
-        a2 = F.pad(a2, [-diffX // 2, diffX // 2 - diffX,
-                        -diffY // 2, diffY // 2 - diffY])
+        a1 = F.pad(a1, [diffX // 2, diffX - diffX // 2,
+                        diffY // 2, diffY - diffY // 2])
 
         x = torch.cat([a2, a1], dim=1)
         return self.conv(x)

@@ -191,18 +191,18 @@ for run in RunBuilder.get_runs(params):
             i+=1
 #             print(i)
         print("EPOCH:   ", epoch)
-        m.end_epoch()
     
-    total_loss_test = 0
-    for batch in val_loader:
-        images, masks = batch
-        images = images.to(device=device,dtype=torch.float32)
-        masks = masks.to(device=device, dtype=mask_type)
-        outputs = network(images)
-        loss = criterion(outputs,masks)
-        total_loss_test += loss.item()
-        print("avg loss:", total_loss_test/split, " epoch:", epoch)
-        
+        total_loss_test = 0
+        for batch in val_loader:
+            images, masks = batch
+            images = images.to(device=device,dtype=torch.float32)
+            masks = masks.to(device=device, dtype=mask_type)
+            outputs = network(images)
+            loss = criterion(outputs,masks)
+            total_loss_test += loss.item()
+            print("avg loss:", total_loss_test/split, " epoch:", epoch)
+            
+        m.end_epoch()     
     m.end_run()
     
 

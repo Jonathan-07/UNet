@@ -153,7 +153,11 @@ train_indices, val_indices = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_indices)
 val_sampler = SubsetRandomSampler(val_indices)
 
-params = OrderedDict(lr=[.01,0.001], batch_size=[1], momentum=[0.99])
+'''
+After training and validation, found lr=0.1 and 11 epochs works best.
+'''
+
+params = OrderedDict(lr=[.01], batch_size=[1], momentum=[0.99])
 m = RunManager()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -171,7 +175,7 @@ for run in RunBuilder.get_runs(params):
     optimiser = torch.optim.SGD(network.parameters(), lr=run.lr, momentum=run.momentum)
 
     m.begin_run(run, network, train_loader)
-    for epoch in range(20):
+    for epoch in range(11):
         m.begin_epoch()
         i=0
         for batch in train_loader:
@@ -218,4 +222,4 @@ for run in RunBuilder.get_runs(params):
 # temp = temp.detach().numpy()
 # np.save('output', temp)
 
-# torch.save(network, 'trained_bacteria_UNet.pt')
+# torch.save(network, 'trained_bacteria_UNet.pth')

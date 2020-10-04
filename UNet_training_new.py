@@ -222,4 +222,4 @@ for run in RunBuilder.get_runs(params):
 # temp = temp.detach().numpy()
 # np.save('output', temp)
 
-# torch.save(network, 'trained_bacteria_UNet.pth')
+torch.save(network, 'trained_bacteria_UNet.pth')

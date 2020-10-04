@@ -170,7 +170,7 @@ for run in RunBuilder.get_runs(params):
     optimiser = torch.optim.SGD(network.parameters(), lr=run.lr, momentum=run.momentum)
 
     m.begin_run(run, network, train_loader)
-    for epoch in range(1):
+    for epoch in range(5):
         m.begin_epoch()
         i=0
         for batch in train_loader:
@@ -184,12 +184,12 @@ for run in RunBuilder.get_runs(params):
             loss.backward()
             optimiser.step()
             m.track_loss(loss)
-            print(loss.item())
+#             print(loss.item())
             temp = outputs.cpu().detach().numpy()
             temp = np.squeeze(np.squeeze(temp))
             # print(correct(temp, np.squeeze(np.squeeze(masks.cpu()))))
             i+=1
-            # print(i)
+#             print(i)
         print("EPOCH:   ", epoch)
         m.end_epoch()
     

@@ -206,11 +206,12 @@ class Bacteria(Dataset):
 bacteria_data = Bacteria('/home/john/Data/test.tif')
 phase, mask = bacteria_data.__getitem__(1)
 
-phases = np.empty(190, dtype=object)
-masks = np.empty(190, dtype=object)
+phases = np.empty(150, dtype=object)
+masks = np.empty(150, dtype=object)
 # 190 is the number of images in this case
+# Choose 150 for training
 
-for i in range(189):
+for i in range(149):
     phases[i] = bacteria_data.__getitem__(i)[0]
     masks[i] = bacteria_data.__getitem__(i)[1]
     
@@ -270,8 +271,8 @@ for run in RunBuilder.get_runs(params):
 
             i += 1
             print(i)
-            print(loss.item())
 
         print("EPOCH:   ", epoch)
         m.end_epoch()
     m.end_run()
+    torch.save(network, 'trained_bacteria_UNet.pt')

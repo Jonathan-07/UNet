@@ -147,6 +147,7 @@ validation_split = .2
 dataset_size = int(dataset.number_image/2)
 indices = list(range(dataset_size))
 split = int(np.floor(validation_split * dataset_size))
+print(split)
 train_indices, val_indices = indices[split:], indices[:split]
 
 train_sampler = SubsetRandomSampler(train_indices)
@@ -200,7 +201,7 @@ for run in RunBuilder.get_runs(params):
             outputs = network(images)
             loss = criterion(outputs,masks)
             total_loss_test += loss.item()
-            print("avg loss:", total_loss_test/split, " epoch:", epoch)
+        print("avg loss:", total_loss_test/split, " epoch:", epoch)
             
         m.end_epoch()     
     m.end_run()

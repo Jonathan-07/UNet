@@ -153,7 +153,7 @@ train_indices, val_indices = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_indices)
 val_sampler = SubsetRandomSampler(val_indices)
 
-params = OrderedDict(lr=[.01,0.01], batch_size=[1], momentum=[0.99])
+params = OrderedDict(lr=[.01,0.001], batch_size=[1], momentum=[0.99])
 m = RunManager()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -171,7 +171,7 @@ for run in RunBuilder.get_runs(params):
     optimiser = torch.optim.SGD(network.parameters(), lr=run.lr, momentum=run.momentum)
 
     m.begin_run(run, network, train_loader)
-    for epoch in range(10):
+    for epoch in range(20):
         m.begin_epoch()
         i=0
         for batch in train_loader:
@@ -191,7 +191,7 @@ for run in RunBuilder.get_runs(params):
             # print(correct(temp, np.squeeze(np.squeeze(masks.cpu()))))
             i+=1
 #             print(i)
-        print("EPOCH:   ", epoch)
+#         print("EPOCH:   ", epoch)
     
         total_loss_test = 0
         for batch in val_loader:
@@ -201,7 +201,7 @@ for run in RunBuilder.get_runs(params):
             outputs = network(images)
             loss = criterion(outputs,masks)
             total_loss_test += loss.item()
-        print("lr:", run.lr, " epoch:", epoch, " avg loss:", total_loss_test/split)
+        print("lr:", run.lr, " epoch:", epoch+1, " avg loss:", total_loss_test/split)
             
         m.end_epoch()     
     m.end_run()

@@ -10,8 +10,8 @@ import pandas as pd
 from UNet_full_network import *
 from dataset import *
 
-dir_img = '..//Carvana_data//train'
-dir_mask = '..//Carvana_data//train_masks'
+dir_img = '/home/john/Carvana_data/train'
+dir_mask = '/home/john/Carvana_data/train_masks'
 
 
 class RunBuilder():

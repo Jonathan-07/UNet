@@ -1,36 +1,22 @@
-from glob import glob
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader, random_split
-from torchvision import transforms, datasets, models, utils
-from collections import OrderedDict, namedtuple
+from torch.utils.data import DataLoader
+from collections import OrderedDict
+from collections import namedtuple
 from itertools import product
-import pandas as pd
 import time
-from os.path import splitext
-from os import listdir
-from os import path
-from PIL import Image
-from torchvision.transforms import ToTensor
-import matplotlib.pyplot as plt
-import natsort
-import numpy as np
+from torch.utils.data.sampler import SubsetRandomSampler
+from torch.utils.tensorboard import SummaryWriter
+import pandas as pd
 
 from UNet_full_network import *
+from dataset import *
 
-# Test model shapes
-# t = torch.ones([1, 1, 572, 572])
-# network = UNet(n_channels=1, n_classes=2)
-# pred = network(t)
-# print(pred.shape)
+dir_img = './/train'
+dir_mask = './/train_masks'
 
 
 class RunBuilder():
     @staticmethod
     def get_runs(params):
-
         Run = namedtuple('Run', params.keys())
 
         runs = []
@@ -63,8 +49,10 @@ class RunManager():
 
         self.network = network
         self.loader = loader
+        self.tb = SummaryWriter(comment=f'-{run}')
 
     def end_run(self):
+        self.tb.close()
         self.epoch_count = 0
 
     def begin_epoch(self):
@@ -78,6 +66,10 @@ class RunManager():
         run_duration = time.time() - self.run_start_time
 
         loss = self.epoch_loss
+        self.tb.add_scalar('Loss', loss, self.epoch_count)
+        for name, param in self.network.named_parameters():
+            self.tb.add_histogram(name, param, self.epoch_count)
+            self.tb.add_histogram(f'{name}.grad', param.grad, self.epoch_count)
 
         results = OrderedDict()
         results["run"] = self.run_count
@@ -88,191 +80,94 @@ class RunManager():
         for k, v in self.run_params._asdict().items(): results[k] = v
         self.run_data.append(results)
 
-        df = pd.DataFrame.from_dict(self.run_data, orient='columns')
-        print(df)
+        # df = pd.DataFrame.from_dict(self.run_data, orient='columns')
+        # print(df)
 
     def track_loss(self, loss):
         self.epoch_loss += loss.item() * self.loader.batch_size
 
 
-class CustomDataset(Dataset):
-    def __init__(self, img_dir, mask_dir, desired_height_width):
-        self.img_dir = img_dir
-        self.mask_dir = mask_dir
-        self.desired_height_width = desired_height_width
-        all_imgs = listdir(img_dir)
-        all_masks = listdir(mask_dir)
-        self.total_imgs = natsort.natsorted(all_imgs)
-        self.total_masks = natsort.natsorted(all_masks)
-
-    @classmethod
-    def preprocess(cls, pil_img, desired_height_width):
-        newW = desired_height_width
-        newH = desired_height_width
-        pil_img = pil_img.resize((newW, newH))
-        return pil_img
-
-    def __len__(self):
-        return len(self.total_imgs)
-
-    def __getitem__(self, idx):
-        img_loc = path.join(self.img_dir, self.total_imgs[idx])
-        image = Image.open(img_loc)
-        #image = image.convert("RGB")
-        image = self.preprocess(image, self.desired_height_width)
-        image = ToTensor()(image)
-
-        mask_loc = path.join(self.mask_dir, self.total_masks[idx])
-        mask = Image.open(mask_loc)
-        # mask = mask.convert("RGB")
-        mask = self.preprocess(mask, self.desired_height_width)
-        mask = ToTensor()(mask)
-
-        return {
-            'image': image,
-            'mask': mask
-        }
-
-    
-class CustomDataset_from_arr(Dataset):
-    def __init__(self, img_arr, mask_arr):
-#         self.desired_width = desired_width
-#         self.desired_height = desired_height
-        self.total_imgs = img_arr
-        self.total_masks = mask_arr
-
-#     @classmethod
-#     def preprocess(cls, pil_img, desired_height_width):
-#         newW = desired_width
-#         newH = desired_height
-#         pil_img = pil_img.resize((newW, newH))
-#         return pil_img
-
-    def __len__(self):
-        return len(self.total_imgs)
-
-    def __getitem__(self, idx):
-        image = self.total_imgs[idx]
-        image = image.astype(np.float32)
-        #image = image.convert("RGB")
-#         image = self.preprocess(image, self.desired_height_width)
-        image = ToTensor()(image)
-
-        mask = self.total_masks[idx]
-        mask = mask.astype(np.float32)
-        # mask = mask.convert("RGB")
-#         mask = self.preprocess(mask, self.desired_height_width)
-        mask = ToTensor()(mask)
-
-        return {
-            'image': image,
-            'mask': mask
-        }
-    
+def correct(outputs, mask):
+    outputs = outputs > 0.9
+    hold = np.logical_and(outputs, mask)
+    return (hold.sum().numpy())
 
 
-class Bacteria(Dataset):
+dataset = CarvanaDataset(dir_img, dir_mask, scale=0.5)
+validation_split = .9
+epochs = 10
 
-    def __init__(self, file_name, transform=None):
-        self.file_name = file_name
-        img = Image.open(file_name)
-        self.number_image = img.n_frames
-        self.image_width = img.size[0]
-        self.image_height = img.size[1]
-        img.close
+dataset_size = dataset.__len__()
+indices = list(range(dataset_size))
+split = int(np.floor(validation_split * dataset_size))
+train_indices, val_indices = indices[split:], indices[:split]
+train_sampler = SubsetRandomSampler(train_indices)
+val_sampler = SubsetRandomSampler(val_indices)
 
-    def loadback(self, index):
-        img = Image.open(self.file_name)
-        img.seek(index)
-        phase = np.asarray(img)
-        img.seek(index+1)
-        mask = np.asarray(img)
-        img.close()
-        masker = torch.from_numpy(mask.astype(np.float32))
-        return phase, mask
-
-    def __len__(self):
-        return(self.number_image/2)
-
-    def __getitem__(self, index):
-        phase, mask = self.loadback(index)
-
-        return(phase, mask)
-
-    def datainfo(self):
-        print('There are ', self.number_image, 'images')
-        print('The size', self.image_width, ' and ', self.image_height)
-
-bacteria_data = Bacteria('/home/john/Data/test.tif')
-phase, mask = bacteria_data.__getitem__(1)
-
-phases = np.empty(150, dtype=object)
-masks = np.empty(150, dtype=object)
-# 190 is the number of images in this case
-# Choose 150 for training
-
-for i in range(149):
-    phases[i] = bacteria_data.__getitem__(i)[0]
-    masks[i] = bacteria_data.__getitem__(i)[1]
-    
-    
-dir_img = '/home/john/input/train/images'
-dir_mask = '/home/john/input/train/masks'
-train_dataset = CustomDataset_from_arr(phases, masks)
-
-
-params = OrderedDict(
-    lr = [.01]
-    ,batch_size = [1]
-    ,momentum = [0.99]
-)
+params = OrderedDict(lr=[.01, .001, .0001], batch_size=[10,20], momentum=[0.99])
 m = RunManager()
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = torch.device("cpu")
 
 for run in RunBuilder.get_runs(params):
-
-    network = UNet(n_channels=1, n_classes=1)
+    network = UNet(n_channels=3, n_classes=1)
     network = network.to(device)
-    train_loader = DataLoader(train_dataset, batch_size=run.batch_size, shuffle=False)
-    loader = train_loader
+    train_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False, sampler=train_sampler)
+    val_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False, sampler=val_sampler)
+
     if network.n_classes > 1:
         criterion = nn.CrossEntropyLoss()
     else:
         criterion = nn.BCEWithLogitsLoss()
-    optimiser = torch.optim.SGD(network.parameters(), lr = run.lr, momentum = run.momentum)
 
-    m.begin_run(run, network, loader)
-    for epoch in range(1):
+    optimiser = torch.optim.SGD(network.parameters(), lr=run.lr, momentum=run.momentum)
+
+    m.begin_run(run, network, train_loader)
+    for epoch in range(epochs):
         m.begin_epoch()
-
+        print(epoch)
         i=0
-        for batch in loader:
+        for batch in train_loader:
             images = batch['image']
-            masks = batch['mask']
+            true_masks = batch['mask']
             images = images.to(device=device, dtype=torch.float32)
             mask_type = torch.float32 if network.n_classes == 1 else torch.long
-            masks = masks.to(device=device, dtype=mask_type)
-
-            outputs = network(images)
-            images_shape = images.shape
-            outputs = F.interpolate(outputs, size=(images_shape[2],images_shape[3]))
-            outputs = torch.squeeze(outputs,1)
-            masks = torch.squeeze(masks,1)
-
-            # plt.imshow(outputs.cpu().detach().squeeze())
-            # plt.imshow(masks.cpu().detach().squeeze())
-
-            loss = criterion(outputs, masks)
-            print(loss.item())
+            true_masks = true_masks.to(device=device, dtype=mask_type)
+            masks_pred = network(images)
+            loss = criterion(masks_pred, true_masks)
+            m.track_loss(loss)
             optimiser.zero_grad()
             loss.backward()
             optimiser.step()
-            m.track_loss(loss)
-
             i += 1
             print(i)
+            # temp = outputs.cpu().detach().numpy()
+            # temp = np.squeeze(np.squeeze(temp))
+            # print(correct(temp, np.squeeze(np.squeeze(masks.cpu()))))
+        #         print("EPOCH:   ", epoch)
 
-        print("EPOCH:   ", epoch)
+
+        #
+        # total_loss_test = 0
+        # for batch in val_loader:
+        #     images, masks = batch
+        #     images = images.to(device=device, dtype=torch.float32)
+        #     masks = masks.to(device=device, dtype=mask_type)
+        #     outputs = network(images)
+        #     loss = criterion(outputs, masks)
+        #     total_loss_test += loss.item()
+        # print("lr:", run.lr, " epoch:", epoch + 1, " avg loss:", total_loss_test / split)
+
         m.end_epoch()
     m.end_run()
-    torch.save(network, 'trained_bacteria_UNet.pt')
+
+# mask_new = masks.to(device='cpu')
+# mask_new = mask_new.squeeze()
+# mask_new = mask_new.squeeze()
+# mask_new = mask_new.detach().numpy()
+# np.save('mask', mask_new)
+# temp = outputs.cpu()
+# temp = temp.detach().numpy()
+# np.save('output', temp)
+
+# torch.save(network, 'trained_bacteria_UNet.pth')

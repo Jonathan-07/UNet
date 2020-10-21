@@ -107,6 +107,7 @@ val_sampler = SubsetRandomSampler(val_indices)
 params = OrderedDict(lr=[.01, .001, .0001], batch_size=[10,20], momentum=[0.99])
 m = RunManager()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print("cuda available") if torch.cuda.is_available()
 
 for run in RunBuilder.get_runs(params):
     network = UNet(n_channels=3, n_classes=1)

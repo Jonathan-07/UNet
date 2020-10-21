@@ -127,14 +127,23 @@ for run in RunBuilder.get_runs(params):
         print(epoch)
         i=0
         for batch in train_loader:
+            print(1)
             images = batch['image']
+            print(2)
             true_masks = batch['mask']
+            print(3)
             images = images.to(device=device, dtype=torch.float32)
+            print(4)
             mask_type = torch.float32 if network.n_classes == 1 else torch.long
+            print(5)
             true_masks = true_masks.to(device=device, dtype=mask_type)
+            print(6)
             masks_pred = network(images)
+            print(7)
             loss = criterion(masks_pred, true_masks)
+            print(8)
             m.track_loss(loss)
+            print(9)
             optimiser.zero_grad()
             loss.backward()
             optimiser.step()

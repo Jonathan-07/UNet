@@ -96,7 +96,7 @@ def correct(outputs, mask):
 
 dataset = CarvanaDataset(dir_img, dir_mask, scale=0.5)
 validation_split = .99
-epochs = 10
+epochs = 5
 
 dataset_size = dataset.__len__()
 indices = list(range(dataset_size))

@@ -97,7 +97,7 @@ def correct(outputs, mask):
 
 dataset = CarvanaDataset(dir_img, dir_mask, scale=0.5)
 validation_split = .99
-epochs = 5
+epochs = 11
 
 dataset_size = dataset.__len__()
 indices = list(range(dataset_size))
@@ -106,7 +106,7 @@ train_indices, val_indices = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_indices)
 val_sampler = SubsetRandomSampler(val_indices)
 
-params = OrderedDict(lr=[.01], batch_size=[2], momentum=[0.99], num_workers=[2,4,8,16])
+params = OrderedDict(lr=[.1,.01,.001,.0001], batch_size=[1,2], momentum=[0.99])
 m = RunManager()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -114,8 +114,8 @@ for run in RunBuilder.get_runs(params):
     network = UNet(n_channels=3, n_classes=1)
     network = network.to(device)
     parallel_network = torch.nn.DataParallel(network)
-    train_loader = DataLoader(dataset, batch_size=run.batch_size, num_workers=run.num_workers, shuffle=False, sampler=train_sampler)
-    val_loader = DataLoader(dataset, batch_size=run.batch_size, num_workers=run.num_workers, shuffle=False, sampler=val_sampler)
+    train_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False, sampler=train_sampler)
+    val_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False, sampler=val_sampler)
 
     if network.n_classes > 1:
         criterion = nn.CrossEntropyLoss()

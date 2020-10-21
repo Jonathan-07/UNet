@@ -106,7 +106,7 @@ train_indices, val_indices = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_indices)
 val_sampler = SubsetRandomSampler(val_indices)
 
-params = OrderedDict(lr=[.01], batch_size=[2], momentum=[0.99], num_workers=[0,1,2,4,8,16])
+params = OrderedDict(lr=[.01], batch_size=[2], momentum=[0.99], num_workers=[0,2,4,8,16])
 m = RunManager()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

@@ -6,6 +6,7 @@ import time
 from torch.utils.data.sampler import SubsetRandomSampler
 from torch.utils.tensorboard import SummaryWriter
 import pandas as pd
+from torch.nn import DataParallel
 
 from UNet_full_network import *
 from dataset import *
@@ -112,6 +113,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 for run in RunBuilder.get_runs(params):
     network = UNet(n_channels=3, n_classes=1)
     network = network.to(device)
+    parallel_network = torch.nn.DataParallel(network)
     train_loader = DataLoader(dataset, batch_size=run.batch_size, num_workers=run.num_workers, shuffle=False, sampler=train_sampler)
     val_loader = DataLoader(dataset, batch_size=run.batch_size, num_workers=run.num_workers, shuffle=False, sampler=val_sampler)
 
@@ -120,9 +122,9 @@ for run in RunBuilder.get_runs(params):
     else:
         criterion = nn.BCEWithLogitsLoss()
 
-    optimiser = torch.optim.SGD(network.parameters(), lr=run.lr, momentum=run.momentum)
+    optimiser = torch.optim.SGD(parallel_network.parameters(), lr=run.lr, momentum=run.momentum)
 
-    m.begin_run(run, network, train_loader)
+    m.begin_run(run, parallel_network, train_loader)
     for epoch in range(epochs):
         m.begin_epoch()
         print(epoch)
@@ -133,11 +135,11 @@ for run in RunBuilder.get_runs(params):
             images = images.to(device=device, dtype=torch.float32)
             mask_type = torch.float32 if network.n_classes == 1 else torch.long
             true_masks = true_masks.to(device=device, dtype=mask_type)
-            masks_pred = network(images)
+            masks_pred = parallel_network(images)
             loss = criterion(masks_pred, true_masks)
             m.track_loss(loss)
             optimiser.zero_grad()
-            loss.backward()
+            loss.mean().backward()
             optimiser.step()
             i += 1
             print(i)

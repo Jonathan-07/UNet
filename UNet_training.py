@@ -97,7 +97,7 @@ def correct(outputs, mask):
 
 dataset = CarvanaDataset(dir_img, dir_mask, scale=0.5)
 validation_split = .99
-epochs = 1
+epochs = 5
 
 dataset_size = dataset.__len__()
 indices = list(range(dataset_size))
@@ -106,7 +106,7 @@ train_indices, val_indices = indices[split:], indices[:split]
 train_sampler = SubsetRandomSampler(train_indices)
 val_sampler = SubsetRandomSampler(val_indices)
 
-params = OrderedDict(lr=[.1,.01,.001,.0001], batch_size=[1], momentum=[0.99])
+params = OrderedDict(lr=[.01,.001], batch_size=[2,1], momentum=[0.99])
 m = RunManager()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

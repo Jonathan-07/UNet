@@ -95,7 +95,9 @@ class UNet(nn.Module):
         self.up2 = UpAlong(512, 256)
         self.up3 = UpAlong(256, 128)
         self.up4 = UpAlong(128, 64)
-        self.outc = OutConv(64, n_classes)
+        self.up5 = UpAlong(64,32)
+        self.upstart = nn.ConvTranspose2d(64, 32, kernel_size=2, stride=2)
+        self.outc = OutConv(32, n_classes)
 
     def forward(self, x):
         x1 = self.inc(x)
@@ -107,7 +109,10 @@ class UNet(nn.Module):
         x7 = self.up2(x6, x3)
         x8 = self.up3(x7, x2)
         x9 = self.up4(x8, x1)
-        output = self.outc(x9)
+        y1 = self.upstart(x1)
+        x10 = self.up5(x9,y1)
+        output = self.outc(x10)
+        output = self.outc(x10)
         return output
 
 

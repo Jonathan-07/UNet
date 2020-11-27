@@ -8,6 +8,14 @@ import logging
 from PIL import Image
 
 
+def crop(im, width_split, height_split):
+    #Returns evenly split tiles. No. tiles is equal to width_split * height_split
+    M = int(im.shape[1]//width_split)
+    N = int(im.shape[0]//height_split)
+    tiles = np.array([np.array(im[y:y+N,x:x+M]) for y in range(0,im.shape[0],N) for x in range(0,im.shape[1],M)])
+    return tiles
+
+
 class BasicDataset(Dataset):
     def __init__(self, imgs_dir, masks_dir, scale=1, mask_suffix=''):
         self.imgs_dir = imgs_dir
@@ -32,15 +40,16 @@ class BasicDataset(Dataset):
 
         img_nd = np.array(pil_img)
 
-        if len(img_nd.shape) == 2:
-            img_nd = np.expand_dims(img_nd, axis=2)
+        wh_ratio = newW / newH
+        img_tiles = crop(img_nd, wh_ratio*2, 2)
 
-        # HWC to CHW
-        img_trans = img_nd.transpose((2, 0, 1))
-        if img_trans.max() > 1:
-            img_trans = img_trans / 255
+        if len(img_tiles.shape) == 3:
+            img_tiles = np.expand_dims(img_tiles, axis=1)
+        # Should now be TCHW, if not then need to np.transpose()
+        if img_tiles.max() > 1:
+            img_tiles = img_tiles / 255
 
-        return img_trans
+        return img_tiles
 
     def __getitem__(self, i):
         idx = self.ids[i]
@@ -66,6 +75,6 @@ class BasicDataset(Dataset):
         }
 
 
-class CarvanaDataset(BasicDataset):
-    def __init__(self, imgs_dir, masks_dir, scale=1):
-        super().__init__(imgs_dir, masks_dir, scale, mask_suffix='_mask')
+# class CarvanaDataset(BasicDataset):
+#     def __init__(self, imgs_dir, masks_dir, scale=1):
+#         super().__init__(imgs_dir, masks_dir, scale, mask_suffix='_mask')

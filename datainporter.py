@@ -81,18 +81,18 @@ class superdata(torch.utils.data.Dataset):
 
         return (image_c,image_i)
 
-training_set = superdata(conf_folder, ism_folder)
-train_loader = torch.utils.data.DataLoader(training_set, batch_size=1)
+# training_set = superdata(conf_folder, ism_folder)
+# train_loader = torch.utils.data.DataLoader(training_set, batch_size=1)
 
 
-print(len(training_set))
-for i, batch in enumerate(train_loader):
-    dc, di = batch
-    print(np.shape(dc),np.shape(di))
-    plt.subplot(1, 2, 1)
-    plt.imshow(dc[0, :, :])
-    plt.subplot(1, 2, 2)
-    plt.imshow(di[0, :, :])
-    plt.show()
+# print(len(training_set))
+# for i, batch in enumerate(train_loader):
+#     dc, di = batch
+#     print(np.shape(dc),np.shape(di))
+#     plt.subplot(1, 2, 1)
+#     plt.imshow(dc[0, :, :])
+#     plt.subplot(1, 2, 2)
+#     plt.imshow(di[0, :, :])
+#     plt.show()
 
 #batch = next(iter(train_loader))

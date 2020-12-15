@@ -9,10 +9,12 @@ import pandas as pd
 from torch.nn import DataParallel
 
 from UNet_full_network import *
-from dataset import *
+from datainporter import *
 
-dir_img = '/home/john/Carvana_data/train'
-dir_mask = '/home/john/Carvana_data/train_masks'
+# dir_img = '/home/john/Carvana_data/train'
+# dir_mask = '/home/john/Carvana_data/train_masks'
+ism_folder = 'ISM'
+conf_folder = 'Conf'
 
 
 class RunBuilder():
@@ -95,18 +97,18 @@ def correct(outputs, mask):
     return (hold.sum().numpy())
 
 
-dataset = CarvanaDataset(dir_img, dir_mask, scale=0.5)
-validation_split = .9
+dataset = superdata(conf_folder, ism_folder)
+# validation_split = .9
 epochs = 15
 
-dataset_size = dataset.__len__()
-indices = list(range(dataset_size))
-split = int(np.floor(validation_split * dataset_size))
-train_indices, val_indices = indices[split:], indices[:split]
-train_sampler = SubsetRandomSampler(train_indices)
-val_sampler = SubsetRandomSampler(val_indices)
+# dataset_size = dataset.__len__()
+# indices = list(range(dataset_size))
+# split = int(np.floor(validation_split * dataset_size))
+# train_indices, val_indices = indices[split:], indices[:split]
+# train_sampler = SubsetRandomSampler(train_indices)
+# val_sampler = SubsetRandomSampler(val_indices)
 
-params = OrderedDict(lr=[.01,.001], batch_size=[1,2], momentum=[0.99])
+params = OrderedDict(lr=[.01,.001], batch_size=[1], momentum=[0.99])
 m = RunManager()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -114,8 +116,8 @@ for run in RunBuilder.get_runs(params):
     network = UNet(n_channels=3, n_classes=1)
     network = network.to(device)
     parallel_network = torch.nn.DataParallel(network)
-    train_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False, sampler=train_sampler)
-    val_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False, sampler=val_sampler)
+    train_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False)
+#     val_loader = DataLoader(dataset, batch_size=run.batch_size, shuffle=False, sampler=val_sampler)
 
     if network.n_classes > 1:
         criterion = nn.CrossEntropyLoss()

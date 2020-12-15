@@ -130,8 +130,7 @@ for run in RunBuilder.get_runs(params):
     for epoch in range(epochs):
         m.begin_epoch()
         for batch in train_loader:
-            images = batch.image_c
-            true_masks = batch.image_i
+            images, masks = batch
             images = images.to(device=device, dtype=torch.float32)
             mask_type = torch.float32 if network.n_classes == 1 else torch.long
             true_masks = true_masks.to(device=device, dtype=mask_type)

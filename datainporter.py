@@ -18,12 +18,12 @@ ism_folder = 'ISM'
 conf_folder = 'Conf'
 
 class superdata(torch.utils.data.Dataset):
-    def __init__(self, confocal_dir, ISM_dir, transform=None):
+    def __init__(self, confocal_dir, ISM_dir, x_split, y_split, transform=None):
         self.confocal_dir = confocal_dir
         self.ISM_dir = ISM_dir
         self.transform = transform
         self.files = superdata.get_file_names(self)
-        self.cut_sections = np.asarray([6, 3])
+        self.cut_sections = np.asarray([x_split, y_slit])             #Try 6,3 initially
 
     def __len__(self):
         return(len(self.files) * np.prod(self.cut_sections))

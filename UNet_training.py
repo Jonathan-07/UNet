@@ -97,7 +97,7 @@ def correct(outputs, mask):
     return (hold.sum().numpy())
 
 
-dataset = superdata(conf_folder, ism_folder)
+dataset = superdata(conf_folder, ism_folder, 6, 3)
 # validation_split = .9
 epochs = 15
 
@@ -145,10 +145,8 @@ for run in RunBuilder.get_runs(params):
             # temp = outputs.cpu().detach().numpy()
             # temp = np.squeeze(np.squeeze(temp))
             # print(correct(temp, np.squeeze(np.squeeze(masks.cpu()))))
-        #         print("EPOCH:   ", epoch)
-
-
-        #
+            
+        """Code for validation"""
         # total_loss_test = 0
         # for batch in val_loader:
         #     images, masks = batch
@@ -171,4 +169,11 @@ for run in RunBuilder.get_runs(params):
 # temp = temp.detach().numpy()
 # np.save('output', temp)
 
-# torch.save(network, 'trained_bacteria_UNet.pth')
+""" Save model when training has optimised it"""
+torch.save(network, 'trained_bacteria_UNet.pth')
+torch.save(network.state_dict(), 'trained_bacteria_UNet.pth')
+
+""" Load model """
+model = UNet(n_channels=3, n_classes=1)
+model.load_state_dict(torch.load('trained_bacteria_UNet.pth'))
+model.eval()

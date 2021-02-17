@@ -170,7 +170,6 @@ for run in RunBuilder.get_runs(params):
 # np.save('output', temp)
 
 """ Save model when training has optimised it"""
-torch.save(network, 'trained_bacteria_UNet.pth')
 torch.save(network.state_dict(), 'trained_bacteria_UNet.pth')
 
 """ Load model """

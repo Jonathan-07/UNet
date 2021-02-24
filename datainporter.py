@@ -23,7 +23,7 @@ class superdata(torch.utils.data.Dataset):
         self.ISM_dir = ISM_dir
         self.transform = transform
         self.files = superdata.get_file_names(self)
-        self.cut_sections = np.asarray([x_split, y_slit])             #Try 6,3 initially
+        self.cut_sections = np.asarray([x_split, y_split])             #Try 6,3 initially
 
     def __len__(self):
         return(len(self.files) * np.prod(self.cut_sections))

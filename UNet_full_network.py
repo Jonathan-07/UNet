@@ -112,12 +112,11 @@ class UNet(nn.Module):
         y1 = self.upstart(x1)
         x10 = self.up5(x9,y1)
         output = self.outc(x10)
-        output = self.outc(x10)
         return output
 
 
 # Test model shapes
-t = torch.ones([1, 1, 572, 572])
-network = UNet(n_channels=1, n_classes=2)
-pred = network(t)
-print(pred.shape)
+# t = torch.ones([1, 1, 572, 572])
+# network = UNet(n_channels=1, n_classes=2)
+# pred = network(t)
+# print(pred.shape)
